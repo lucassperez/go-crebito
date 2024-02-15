@@ -1,0 +1,12 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql/seed.sql:/seed.sql
+      - ./tmp/psql_history:/root/.psql_history
+      - ./tmp/bash_history:/root/.bash_history
