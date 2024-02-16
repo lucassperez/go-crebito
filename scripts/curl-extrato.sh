@@ -18,13 +18,7 @@ fi
 if [ "$nojq" = sim ]; then
   echo "$(tput bold)$curl_to_print localhost:4000/clientes/1/extrato$(tput sgr0)"
   curl $@ localhost:4000/clientes/1/extrato
-
-  echo "$(tput bold)$curl_to_print -X POST localhost:4000/clientes/1/transacoes$(tput sgr0)"
-  curl $@ -X POST localhost:4000/clientes/1/transacoes
 else
   echo "$(tput bold)$curl_to_print localhost:4000/clientes/1/extrato | jq$(tput sgr0)"
   curl $@ localhost:4000/clientes/1/extrato | jq
-
-  echo "$(tput bold)$curl_to_print -X POST localhost:4000/clientes/1/transacoes | jq$(tput sgr0)"
-  curl $@ -X POST localhost:4000/clientes/1/transacoes | jq
 fi
