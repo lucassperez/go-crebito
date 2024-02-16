@@ -12,6 +12,24 @@ import (
 	"github.com/lucassperez/go-crebito/models"
 )
 
+type saldoJSON struct {
+	Limite      int    `json:"limite"`
+	Total       int    `json:"total"`
+	DataExtrato string `json:"data_extrato"`
+}
+
+type transacaoJSON struct {
+	Valor       int    `json:"valor"`
+	Tipo        string `json:"tipo"`
+	Descricao   string `json:"descricao"`
+	RealizadaEm string `json:"realizada_em"`
+}
+
+type extratoJSON struct {
+	Saldo             saldoJSON       `json:"saldo"`
+	UltimasTransacoes []transacaoJSON `json:"ultimas_transacoes"`
+}
+
 func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
@@ -43,40 +61,22 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO útimas transações
-	var result struct {
-		Saldo struct {
-			Limite      int    `json:"limite"`
-			Total       int    `json:"total"`
-			DataExtrato string `json:"data_extrato"`
-		} `json:"saldo"`
-		UltimasTransacoes []struct {
-			Valor       int    `json:"valor"`
-			Tipo        string `json:"tipo"`
-			Descricao   string `json:"descricao"`
-			RealizadaEm string `json:"realizada_em"`
-		} `json:"ultimas_transacoes"`
-	}
+	var extrato extratoJSON
 
-	result.Saldo.Limite = cliente.Limite
-	result.Saldo.Total = cliente.Saldo
-	result.Saldo.DataExtrato = timeStamp
+	extrato.Saldo.Limite = cliente.Limite
+	extrato.Saldo.Total = cliente.Saldo
+	extrato.Saldo.DataExtrato = timeStamp
 
-	result.UltimasTransacoes = make([]struct {
-		Valor       int    `json:"valor"`
-		Tipo        string `json:"tipo"`
-		Descricao   string `json:"descricao"`
-		RealizadaEm string `json:"realizada_em"`
-	}, len(transacoes))
+	extrato.UltimasTransacoes = make([]transacaoJSON, len(transacoes))
 
 	for i, t := range transacoes {
-		result.UltimasTransacoes[i].Valor = t.Valor
-		result.UltimasTransacoes[i].Tipo = t.Tipo
-		result.UltimasTransacoes[i].Descricao = t.Descricao
-		result.UltimasTransacoes[i].RealizadaEm = t.RealizadaEm
+		extrato.UltimasTransacoes[i].Valor = t.Valor
+		extrato.UltimasTransacoes[i].Tipo = t.Tipo
+		extrato.UltimasTransacoes[i].Descricao = t.Descricao
+		extrato.UltimasTransacoes[i].RealizadaEm = t.RealizadaEm
 	}
 
-	b, err := json.Marshal(result)
+	b, err := json.Marshal(extrato)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		somethingWentWrong(w, err)
@@ -90,7 +90,7 @@ func HandleTransacoes(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	id := r.PathValue("id")
-	fmt.Fprintf(w, "{\"id\": %s, \"rota\": \"post\"}", id)
+	fmt.Fprintf(w, "{\"id\": %s, \"rota\": \"post\", \"implement\": \"me\"}\n", id)
 }
 
 func somethingWentWrong(w http.ResponseWriter, err error) {
