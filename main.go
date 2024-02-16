@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 
@@ -15,7 +17,13 @@ func logMiddleware(next http.Handler) http.Handler {
 		func(w http.ResponseWriter, r *http.Request) {
 			s := fmt.Sprintf("\033[36m\"\033[35;1m%s\033[0;36m %s\"\033[0m", r.Method, r.URL)
 			if r.Method == "POST" {
-				s = fmt.Sprintf("%s %s", s, r.Body)
+				bodyBytes, err := io.ReadAll(r.Body)
+				if err == nil {
+					s = fmt.Sprintf("%s %s", s, (bodyBytes))
+				} else {
+					s = fmt.Sprintf("%s (could not read body: %w)", s, err)
+				}
+				r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 			}
 			applog.WithTimeStamp(s)
 			next.ServeHTTP(w, r)
