@@ -13,3 +13,9 @@ func somethingWentWrong(w http.ResponseWriter, err error) {
 	applog.WithTimeStamp(err.Error())
 	return
 }
+
+func unparseableId(w http.ResponseWriter, id string, err error) {
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	fmt.Fprintf(w, "{\"message\": \"unparseable id\"\n}")
+	applog.WithTimeStamp("unparseable id: `%s`", id)
+}

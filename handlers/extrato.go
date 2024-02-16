@@ -36,9 +36,7 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		applog.WithTimeStamp("unparseable id: `%s`", idStr)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"unparseable id\"\n}")
+		unparseableId(w, idStr, err)
 		return
 	}
 
