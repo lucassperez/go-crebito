@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker compose exec db psql -U postgres --echo-all -c 'SELECT * FROM clientes;'
+docker compose exec db psql -U postgres -d rinha-go-crebito --echo-all -c 'SELECT * FROM clientes;'

@@ -5,6 +5,7 @@ services:
     image: postgres:14-alpine
     environment:
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rinha-go-crebito
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./sql/seed.sql:/seed.sql
