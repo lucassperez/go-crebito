@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -54,4 +55,56 @@ func GetUltimas10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 	}
 
 	return ts, nil
+}
+
+// InsertTransacaoAndUpdateCliente returns limite, newSaldo and error
+func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, descricao string) (int, int, error) {
+	row := db.QueryRow(`SELECT limite, saldo FROM clientes WHERE id = $1;`, clienteId)
+
+	var limite int
+	var saldo int
+
+	err := row.Scan(&limite, &saldo)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, 0, ErrNotFound
+		}
+		return 0, 0, fmt.Errorf("insert_transacao#row.Scan(): %w", err)
+	}
+
+	var newSaldo int
+
+	if tipo == "d" {
+		newSaldo = saldo - valor
+		if newSaldo < -limite {
+			return 0, saldo, &ErrNotEnoughBalance{
+				SaldoAtual: saldo, ValorDaTransacao: valor, Limite: limite, ClienteID: clienteId,
+			}
+		}
+	} else if tipo == "c" {
+		newSaldo = saldo + valor
+	} else {
+		// TODO fazer descrição ser um tipo, um enum, algo assim
+		return 0, 0, errors.New("invalid tipo")
+	}
+
+	_, err = db.Exec(
+		`INSERT INTO transacoes (valor, tipo, descricao, cliente_id) VALUES ($1, $2, $3, $4)`,
+		valor, tipo, descricao, clienteId,
+	)
+	if err != nil {
+		return 0, 0, fmt.Errorf("insert_transacao#db.Exec(transacoes): %w", err)
+	}
+
+	// Should I use returning here to return real value from the database
+	// or is returning the values in these golang variables enough?
+	_, err = db.Exec(
+		`UPDATE clientes SET saldo = $1 WHERE id = $2;`,
+		newSaldo, clienteId,
+	)
+	if err != nil {
+		return 0, 0, fmt.Errorf("insert_transacao#db.Exec(transacoes): %w", err)
+	}
+
+	return limite, newSaldo, nil
 }
