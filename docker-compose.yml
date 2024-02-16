@@ -10,3 +10,5 @@ services:
       - ./sql/seed.sql:/seed.sql
       - ./tmp/psql_history:/root/.psql_history
       - ./tmp/bash_history:/root/.bash_history
+    ports:
+      - 5432:5432
