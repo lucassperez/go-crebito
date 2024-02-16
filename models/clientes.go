@@ -6,8 +6,6 @@ import (
 	"fmt"
 )
 
-var ErrNotFound = errors.New("models: resource could not be found")
-
 type Cliente struct {
 	ID     int
 	Limite int
