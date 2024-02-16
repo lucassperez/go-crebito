@@ -41,6 +41,6 @@ func main() {
 	muxComMiddleware := logMiddleware(mux)
 
 	porta := "4000"
-	applog.WithTimeStamp(fmt.Sprintf("Começando o server na porta %s", porta))
+	applog.WithTimeStamp("Começando o server na porta %s", porta)
 	log.Fatal(http.ListenAndServe(":"+porta, muxComMiddleware))
 }

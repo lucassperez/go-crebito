@@ -36,7 +36,7 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		applog.WithTimeStamp(fmt.Sprintf("unparseable id: `%s`", idStr))
+		applog.WithTimeStamp("unparseable id: `%s`", idStr)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"unparseable id\"\n}")
 		return
@@ -46,7 +46,7 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			w.WriteHeader(http.StatusNotFound)
-			applog.WithTimeStamp(fmt.Sprintf("cliente with id `%d` not found", id))
+			applog.WithTimeStamp("cliente with id `%d` not found", id)
 			fmt.Fprintf(w, "{\"message\": \"cliente not found\"}\n")
 			return
 		} else {
