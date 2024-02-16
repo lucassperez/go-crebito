@@ -17,7 +17,10 @@ type Transacao struct {
 
 func GetUltimas10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 	rows, err := db.Query(
-		`SELECT valor, tipo, descricao, realizada_em FROM transacoes WHERE cliente_id = $1 LIMIT 10;`,
+		`SELECT valor, tipo, descricao, realizada_em FROM transacoes `+
+			`WHERE cliente_id = $1 `+
+			`ORDER BY realizada_em DESC `+
+			`LIMIT 10;`,
 		id_cliente,
 	)
 
