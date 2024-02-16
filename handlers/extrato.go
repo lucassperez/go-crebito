@@ -85,17 +85,3 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, string(b))
 }
-
-func HandleTransacoes(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	id := r.PathValue("id")
-	fmt.Fprintf(w, "{\"id\": %s, \"rota\": \"post\", \"implement\": \"me\"}\n", id)
-}
-
-func somethingWentWrong(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-	fmt.Fprintf(w, "{\"message\": \"something went wrong\"}\n")
-	log.WithTimeStamp(err.Error())
-	return
-}
