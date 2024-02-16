@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/lucassperez/go-crebito/log"
+	"github.com/lucassperez/go-crebito/applog"
 )
 
 func somethingWentWrong(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprintf(w, "{\"message\": \"something went wrong\"}\n")
-	log.WithTimeStamp(err.Error())
+	applog.WithTimeStamp(err.Error())
 	return
 }

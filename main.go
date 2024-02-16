@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	stdlog "log"
+	"log"
 	"net/http"
 
+	"github.com/lucassperez/go-crebito/applog"
 	"github.com/lucassperez/go-crebito/database"
 	"github.com/lucassperez/go-crebito/handlers"
-	"github.com/lucassperez/go-crebito/log"
 )
 
 func logMiddleware(next http.Handler) http.Handler {
@@ -17,7 +17,7 @@ func logMiddleware(next http.Handler) http.Handler {
 			if r.Method == "POST" {
 				s = fmt.Sprintf("%s %s", s, r.Body)
 			}
-			log.WithTimeStamp(s)
+			applog.WithTimeStamp(s)
 			next.ServeHTTP(w, r)
 		},
 	)
@@ -41,6 +41,6 @@ func main() {
 	muxComMiddleware := logMiddleware(mux)
 
 	porta := "4000"
-	log.WithTimeStamp(fmt.Sprintf("Começando o server na porta %s", porta))
-	stdlog.Fatal(http.ListenAndServe(":"+porta, muxComMiddleware))
+	applog.WithTimeStamp(fmt.Sprintf("Começando o server na porta %s", porta))
+	log.Fatal(http.ListenAndServe(":"+porta, muxComMiddleware))
 }
