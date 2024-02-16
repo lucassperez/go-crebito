@@ -14,6 +14,6 @@ CREATE TABLE IF NOT EXISTS transacoes (
   valor INT NOT NULL,
   tipo tipo_transacao NOT NULL,
   descricao VARCHAR(10) CHECK (LENGTH(descricao) >= 1),
-  realizada_em TIMESTAMP NOT NULL,
+  realizada_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cliente_id INT REFERENCES clientes (id) ON DELETE CASCADE
 );
