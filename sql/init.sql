@@ -6,9 +6,14 @@ CREATE TABLE IF NOT EXISTS clientes (
 
 CREATE TYPE tipo_transacao AS ENUM ('c', 'd');
 
+-- TIMESTAMP não tem fuso
+-- TIMESTAMPTZ tem fuso
+-- Vendo o repo da rinha, acho que é pra usar sem fuso?
 CREATE TABLE IF NOT EXISTS transacoes (
   id SERIAL PRIMARY KEY,
+  valor INT NOT NULL,
   tipo tipo_transacao NOT NULL,
   descricao VARCHAR(10) CHECK (LENGTH(descricao) >= 1),
-  cliente_id INT UNIQUE REFERENCES clientes (id) ON DELETE CASCADE
+  realizada_em TIMESTAMP NOT NULL,
+  cliente_id INT REFERENCES clientes (id) ON DELETE CASCADE
 );
