@@ -15,5 +15,6 @@ func Database() (db *sql.DB, closeFunc func() error, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("error at opening db: %w", err)
 	}
+
 	return db, db.Close, nil
 }
