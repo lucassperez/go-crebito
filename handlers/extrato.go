@@ -53,7 +53,7 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	transacoes, err := models.GetUltimas10Transacoes(db, cliente.ID)
+	transacoes, err := models.GetLast10Transacoes(db, cliente.ID)
 	if err != nil {
 		somethingWentWrong(w, err)
 		return
