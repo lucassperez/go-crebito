@@ -6,6 +6,7 @@ tmp_dir = "tmp"
   delay = 100
   log = "air-build-errors.log"
   rerun = false
+  exclude_dir = ["load-test"]
 
 [log]
   time = true
