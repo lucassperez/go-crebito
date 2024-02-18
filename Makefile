@@ -1,3 +1,5 @@
+.PHONY: *
+
 help:
 # Shows with # after the make target name as a list of available commands. Also show the aliases
 	@echo "Available Commands:"
@@ -8,18 +10,23 @@ help:
 PSQL_COMMAND := docker compose exec db psql -U postgres -d rinha-go-crebito
 DB_COMMAND := $(PSQL_COMMAND) --echo-all
 
-bash:
-	docker compose exec db bash
+bash: api # starts bash in api container
+	docker compose exec api bash
 
-server: # starts the db service and run air
-	docker compose up db -d
-	air
+server: db # starts the db service on the background and run api service with --rm option
+	./scripts/test-db.sh && docker compose run --rm --service-ports api || docker compose stop db
 
 up: # executes docker compose up
 	docker compose up -d
 
 down: # executes docker compose down
 	docker compose down
+
+db: # executes docker compose up db -d
+	docker compose up db -d
+
+api: db # executes docker compose up api -d
+	docker compose up api -d
 
 psql: # start psql inside the db container
 	$(PSQL_COMMAND)
@@ -41,4 +48,5 @@ b: bash
 p: psql
 s: server
 u: up
+d: down
 r: reset
