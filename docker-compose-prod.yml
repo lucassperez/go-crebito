@@ -14,6 +14,11 @@ services:
       - 4000:4000
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.125'
+          memory: '60MB'
 
   api2:
     <<: *api
@@ -31,6 +36,11 @@ services:
       - ./sql/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
     ports:
       - 5432:5432
+    deploy:
+      resources:
+        limits:
+          cpus: '1.1'
+          memory: '400MB'
 
   nginx:
     image: nginx:latest
@@ -41,3 +51,8 @@ services:
       - api2
     ports:
       - 9999:9999
+    deploy:
+      resources:
+        limits:
+          cpus: '0.15'
+          memory: '30MB'
