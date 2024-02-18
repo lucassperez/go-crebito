@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/lucassperez/go-crebito/applog"
 	"github.com/lucassperez/go-crebito/database"
@@ -48,7 +49,11 @@ func main() {
 
 	muxComMiddleware := logMiddleware(mux)
 
-	porta := "4000"
-	applog.WithTimeStamp("Começando o server na porta %s", porta)
-	log.Fatal(http.ListenAndServe(":"+porta, muxComMiddleware))
+	port := os.Getenv("SERVER_ADDRESS")
+	if port == "" {
+		port = "4000"
+		applog.WithTimeStamp("Variable SERVER_ADDRESS empty, using default value of %s", port)
+	}
+	applog.WithTimeStamp("Starting the server at port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, muxComMiddleware))
 }
