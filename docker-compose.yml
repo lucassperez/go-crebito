@@ -1,6 +1,22 @@
 version: '3.9'
 
 services:
+  api:
+    build:
+      dockerfile: Dockerfile
+      target: dev
+    image: go-crebito-local
+    environment:
+      # The db service's name
+      PG_HOST: db
+      SERVER_ADDRESS: 4000
+    volumes:
+      - .:/app
+    ports:
+      # host:container
+      - 4000:4000
+    depends_on:
+      - db
   db:
     image: postgres:14-alpine
     environment:
