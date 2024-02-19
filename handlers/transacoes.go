@@ -32,20 +32,20 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var params requestParamsTransacaoPOST
-
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		applog.WithTimeStamp("could not read body: `%w`", err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
 		return
 	}
 
+	var params requestParamsTransacaoPOST
+
 	err = json.Unmarshal(b, &params)
 	if err != nil {
 		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "{\"message\": \"could not unmarshall json\", \"json\": %s}\n", b)
 		return
 	}
@@ -55,6 +55,14 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
+		return
+	}
+
+	lenDescricao := len(params.Descricao)
+	if params.Valor < 0 || (params.Tipo != "d" && params.Tipo != "c") || (lenDescricao < 1 || lenDescricao > 10) {
+		applog.WithTimeStamp("invalid params: %+v", params)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\"message\": \"invalid params\"}\n")
 		return
 	}
 
