@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/lucassperez/go-crebito/models"
 )
@@ -44,7 +45,7 @@ func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Reque
 		dbPoolChan <- db
 	}()
 
-	cliente, timeStamp, err := models.GetCliente(db, id)
+	cliente, err := models.GetCliente(db, id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
 			clienteNotFound(w, id, err)
@@ -62,6 +63,8 @@ func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Reque
 	}
 
 	var extrato extratoJSON
+
+	timeStamp := time.Now().Format("2006-01-02T15:04:05.000000Z")
 
 	extrato.Saldo.Limite = cliente.Limite
 	extrato.Saldo.Total = cliente.Saldo

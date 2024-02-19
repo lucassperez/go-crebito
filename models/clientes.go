@@ -12,30 +12,29 @@ type Cliente struct {
 	Saldo  int
 }
 
-func GetCliente(db *sql.DB, id int) (*Cliente, string, error) {
+func GetCliente(db *sql.DB, id int) (*Cliente, error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return nil, "", fmt.Errorf("get_cliente: could not start transaction: %w", err)
+		return nil, fmt.Errorf("get_cliente: could not start transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	row := tx.QueryRow(`SELECT limite, saldo, LOCALTIMESTAMP FROM clientes WHERE id = $1 FOR NO KEY UPDATE;`, id)
+	row := tx.QueryRow(`SELECT limite, saldo FROM clientes WHERE id = $1 FOR NO KEY UPDATE;`, id)
 
-	c := Cliente{ID: id}
-	var timeStamp string
+	cliente := Cliente{ID: id}
 
-	err = row.Scan(&c.Limite, &c.Saldo, &timeStamp)
+	err = row.Scan(&cliente.Limite, &cliente.Saldo)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, "", ErrNotFound
+			return nil, ErrNotFound
 		}
-		return nil, "", fmt.Errorf("get_cliente: %w", err)
+		return nil, fmt.Errorf("get_cliente: %w", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, "", fmt.Errorf("get_cliente: could not commit the transaction: %w", err)
+		return nil, fmt.Errorf("get_cliente: could not commit the transaction: %w", err)
 	}
 
-	return &c, timeStamp, nil
+	return &cliente, nil
 }
