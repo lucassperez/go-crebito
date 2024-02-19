@@ -81,7 +81,6 @@ func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Reque
 
 	b, err := json.Marshal(extrato)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		somethingWentWrong(w, err)
 		return
 	}
