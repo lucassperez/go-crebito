@@ -20,7 +20,7 @@ EOF
 
 COPY . .
 
-CMD ["air", "--build.cmd=", "go build -buildvcs=false -o ./tmp/main"]
+CMD air --build.cmd='go build -buildvcs=false -o ./tmp/main .' --build.bin='./tmp/main'
 
 ### PROD ###
 
