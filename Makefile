@@ -45,7 +45,6 @@ seed: # executes the seed.sql
 
 reset: drop create seed # database drop, create and seed
 
-
 prod.up: # starts two api services, one db and one nginx, all building from Dockerfile instead of pulling from dockerhub
 	docker compose -f docker-compose-prod.yml up --build -d nginx
 
