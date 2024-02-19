@@ -31,7 +31,7 @@ type transacaoJSON struct {
 }
 
 func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8;")
 
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)

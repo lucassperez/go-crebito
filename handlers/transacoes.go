@@ -21,7 +21,7 @@ type requestParamsJSON struct {
 }
 
 func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8;")
 
 	clienteIdStr := r.PathValue("id")
 	clienteId, err := strconv.Atoi(clienteIdStr)
