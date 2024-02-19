@@ -28,14 +28,13 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 
 	if err != nil {
 		unparseableId(w, clienteIdStr, err)
-		fmt.Println(clienteId)
 		return
 	}
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		applog.WithTimeStamp("could not read body: `%w`", err)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
 		return
 	}
@@ -45,7 +44,7 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 	err = json.Unmarshal(b, &params)
 	if err != nil {
 		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"could not unmarshall json\", \"json\": %s}\n", b)
 		return
 	}
@@ -53,7 +52,7 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 	json := string(b)
 	if isMissingKeys(json, "valor", "tipo", "descricao") {
 		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
 		return
 	}

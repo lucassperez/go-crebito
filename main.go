@@ -25,8 +25,6 @@ func main() {
 		}
 	}()
 
-	applog.WithTimeStamp("Size of connection pool: %d", len(dbPoolChan))
-
 	var mux *http.ServeMux = http.NewServeMux()
 	mux.HandleFunc("GET /clientes/{id}/extrato", func(w http.ResponseWriter, r *http.Request) {
 		handlers.HandleExtrato(dbPoolChan, w, r)
@@ -35,15 +33,15 @@ func main() {
 		handlers.HandleTransacoes(dbPoolChan, w, r)
 	})
 
-	muxComMiddleware := logMiddleware(mux)
-
 	port := os.Getenv("SERVER_ADDRESS")
 	if port == "" {
 		port = "4000"
 		applog.WithTimeStamp("Variable SERVER_ADDRESS empty, using default value of %s", port)
 	}
+
+	muxWithMiddleware := logMiddleware(mux)
 	applog.WithTimeStamp("Starting the server at port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, muxComMiddleware))
+	log.Fatal(http.ListenAndServe(":"+port, muxWithMiddleware))
 }
 
 func logMiddleware(next http.Handler) http.Handler {

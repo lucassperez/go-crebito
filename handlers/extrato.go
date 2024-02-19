@@ -11,6 +11,11 @@ import (
 	"github.com/lucassperez/go-crebito/models"
 )
 
+type extratoJSON struct {
+	Saldo             saldoJSON       `json:"saldo"`
+	UltimasTransacoes []transacaoJSON `json:"ultimas_transacoes"`
+}
+
 type saldoJSON struct {
 	Limite      int    `json:"limite"`
 	Total       int    `json:"total"`
@@ -22,11 +27,6 @@ type transacaoJSON struct {
 	Tipo        string `json:"tipo"`
 	Descricao   string `json:"descricao"`
 	RealizadaEm string `json:"realizada_em"`
-}
-
-type extratoJSON struct {
-	Saldo             saldoJSON       `json:"saldo"`
-	UltimasTransacoes []transacaoJSON `json:"ultimas_transacoes"`
 }
 
 func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Request) {
