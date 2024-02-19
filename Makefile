@@ -8,7 +8,7 @@ help:
 	@echo --- Aliases ---
 	@sed -n '/#[ a-zA-Z]*[aA]liases/,$$p' Makefile | tail -n +2 | while read -r l; do printf "$$(tput setaf 3)$$(tput bold)$$(echo $$l | cut -d ':' -f 1)$$(tput sgr0):$$(echo $$l | cut -d ':' -f 2-)\n"; done
 
-PSQL_COMMAND := docker compose exec db psql -U postgres -d rinha-go-crebito
+PSQL_COMMAND := docker compose exec db psql -U rinheiro -d rinha-go-crebito
 DB_COMMAND := $(PSQL_COMMAND) --echo-all
 
 bash: api # starts bash in api container

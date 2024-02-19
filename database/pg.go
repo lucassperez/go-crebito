@@ -27,16 +27,14 @@ func NewDatabasePool() (dbPoolChan chan *sql.DB, err error) {
 }
 
 func buildPgString() string {
-	host := getEnvOrDefault("PG_HOST", "localhost")
+	host := getEnvOrDefault("DB_HOST", "localhost")
+	user := getEnvOrDefault("DB_USER", "rinheiro")
+	password := getEnvOrDefault("DB_PASSWORD", "rinha123")
+	dbname := getEnvOrDefault("DB_NAME", "rinha-go-crebito")
 
 	return fmt.Sprintf(
-		"host=%s "+
-			"port=5432 "+
-			"user=postgres "+
-			"password=postgres "+
-			"dbname=rinha-go-crebito "+
-			"sslmode=disable",
-		host,
+		"host=%s port=5432 user=%s password=%s dbname=%s sslmode=disable",
+		host, user, password, dbname,
 	)
 }
 

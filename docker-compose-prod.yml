@@ -8,12 +8,14 @@ services:
       target: prod
     hostname: api1
     environment:
-      # The db service's name
-      PG_HOST: db
+      SERVER_ADDRESS: 4000
+      DB_HOST: db
+      DB_USER: rinheiro
+      DB_PASSWORD: rinha123
+      DB_NAME: rinha-go-crebito
     volumes:
       - .:/app
     ports:
-      # host:container
       - 4000:4000
     depends_on:
       - db
@@ -32,12 +34,13 @@ services:
   db:
     image: postgres:14
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: rinheiro
+      POSTGRES_PASSWORD: rinha123
       POSTGRES_DB: rinha-go-crebito
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/1-init.sql
       - ./sql/seed.sql:/docker-entrypoint-initdb.d/2-seed.sql
-      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
       - 5432:5432
     deploy:
@@ -49,7 +52,7 @@ services:
   nginx:
     image: nginx:latest
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - api1
       - api2
