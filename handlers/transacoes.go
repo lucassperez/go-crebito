@@ -36,25 +36,26 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
+		applog.WithTimeStamp("could not read body: `%w`", err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
-		applog.WithTimeStamp("could not read body: `%w`", err)
 		return
 	}
 
 	err = json.Unmarshal(b, &params)
 	if err != nil {
+		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"could not unmarshall json\", \"json\": %s}\n", b)
-		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
 		return
 	}
 
 	json := string(b)
 	if isMissingKeys(json, "valor", "tipo", "descricao") {
+		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
-		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
+		return
 	}
 
 	db := <-dbPoolChan
@@ -66,9 +67,9 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 		if errors.Is(err, &models.ErrNotEnoughBalance{}) {
 			e := err.(*models.ErrNotEnoughBalance)
 
+			applog.WithTimeStamp(e.MoreInfo())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
-			applog.WithTimeStamp(e.MoreInfo())
 			return
 		} else if errors.Is(err, models.ErrNotFound) {
 			clienteNotFound(w, clienteId, err)
