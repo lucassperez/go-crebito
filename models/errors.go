@@ -18,10 +18,6 @@ func (e *ErrNotEnoughBalance) Error() string {
 	return "models: cliente does not have enough balance"
 }
 
-func (e *ErrNotEnoughBalance) MoreInfo() string {
-	return fmt.Sprintf("%s. Values: %s", e.Error(), e.Values())
-}
-
 func (e *ErrNotEnoughBalance) Values() string {
 	return fmt.Sprintf(
 		"cliente_id: %d, limite: %d, saldo: %d, valor da transacao: %d",

@@ -46,7 +46,7 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 	if err != nil {
 		if errors.Is(err, &models.ErrNotEnoughBalance{}) {
 			e := err.(*models.ErrNotEnoughBalance)
-			applog.WithTimeStamp(e.MoreInfo())
+			applog.WithTimeStamp("%s. Values: %s", e.Error(), e.Values())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
 			return
