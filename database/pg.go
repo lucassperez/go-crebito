@@ -8,14 +8,22 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-func Database() (db *sql.DB, closeFunc func() error, err error) {
-	db, err = sql.Open("pgx", buildPgString())
+// 50 is max_connections in postgresql.conf and
+// 2 are the number of instances I'll have running in prod
+const poolSize int = 50 / 2
 
-	if err != nil {
-		return nil, nil, fmt.Errorf("error at opening db: %w", err)
+func NewDatabasePool() (dbPoolChan chan *sql.DB, err error) {
+	dbPoolChan = make(chan *sql.DB, poolSize)
+
+	for i := 1; i <= poolSize; i++ {
+		db, err := sql.Open("pgx", buildPgString())
+		if err != nil {
+			return nil, fmt.Errorf("error at opening db #%d: %w", i, err)
+		}
+		dbPoolChan <- db
 	}
 
-	return db, db.Close, nil
+	return dbPoolChan, nil
 }
 
 func buildPgString() string {

@@ -13,6 +13,43 @@ import (
 	"github.com/lucassperez/go-crebito/handlers"
 )
 
+func main() {
+	dbPoolChan, err := database.NewDatabasePool()
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		for d := range dbPoolChan {
+			d.Close()
+		}
+	}()
+
+	applog.WithTimeStamp("Size of connection pool: %d", len(dbPoolChan))
+
+	var mux *http.ServeMux = http.NewServeMux()
+	mux.HandleFunc("GET /clientes/{id}/extrato", func(w http.ResponseWriter, r *http.Request) {
+		db := <-dbPoolChan
+		defer func() { dbPoolChan <- db }()
+		handlers.HandleExtrato(db, w, r)
+	})
+	mux.HandleFunc("POST /clientes/{id}/transacoes", func(w http.ResponseWriter, r *http.Request) {
+		db := <-dbPoolChan
+		defer func() { dbPoolChan <- db }()
+		handlers.HandleTransacoes(db, w, r)
+	})
+
+	muxComMiddleware := logMiddleware(mux)
+
+	port := os.Getenv("SERVER_ADDRESS")
+	if port == "" {
+		port = "4000"
+		applog.WithTimeStamp("Variable SERVER_ADDRESS empty, using default value of %s", port)
+	}
+	applog.WithTimeStamp("Starting the server at port %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, muxComMiddleware))
+}
+
 func logMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -30,30 +67,4 @@ func logMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		},
 	)
-}
-
-func main() {
-	db, closeFunc, err := database.Database()
-	if err != nil {
-		panic(err)
-	}
-	defer closeFunc()
-
-	var mux *http.ServeMux = http.NewServeMux()
-	mux.HandleFunc("GET /clientes/{id}/extrato", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandleExtrato(db, w, r)
-	})
-	mux.HandleFunc("POST /clientes/{id}/transacoes", func(w http.ResponseWriter, r *http.Request) {
-		handlers.HandleTransacoes(db, w, r)
-	})
-
-	muxComMiddleware := logMiddleware(mux)
-
-	port := os.Getenv("SERVER_ADDRESS")
-	if port == "" {
-		port = "4000"
-		applog.WithTimeStamp("Variable SERVER_ADDRESS empty, using default value of %s", port)
-	}
-	applog.WithTimeStamp("Starting the server at port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, muxComMiddleware))
 }
