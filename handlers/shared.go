@@ -7,15 +7,20 @@ import (
 	"github.com/lucassperez/go-crebito/applog"
 )
 
+func clienteNotFound(w http.ResponseWriter, id int, err error) {
+	applog.WithTimeStamp("cliente with id `%d` not found", id)
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprintf(w, "{\"message\": \"cliente not found\"}\n")
+}
+
 func somethingWentWrong(w http.ResponseWriter, err error) {
+	applog.WithTimeStamp(err.Error())
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprintf(w, "{\"message\": \"something went wrong\"}\n")
-	applog.WithTimeStamp(err.Error())
-	return
 }
 
 func unparseableId(w http.ResponseWriter, id string, err error) {
+	applog.WithTimeStamp("unparseable id: `%s`", id)
 	w.WriteHeader(http.StatusUnprocessableEntity)
 	fmt.Fprintf(w, "{\"message\": \"unparseable id\"\n}")
-	applog.WithTimeStamp("unparseable id: `%s`", id)
 }

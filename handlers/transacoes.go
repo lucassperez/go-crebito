@@ -68,6 +68,9 @@ func HandleTransacoes(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
 			applog.WithTimeStamp(e.MoreInfo())
 			return
+		} else if errors.Is(err, models.ErrNotFound) {
+			clienteNotFound(w, clienteId, err)
+			return
 		}
 		somethingWentWrong(w, err)
 		return

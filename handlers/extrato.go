@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/lucassperez/go-crebito/applog"
 	"github.com/lucassperez/go-crebito/models"
 )
 
@@ -43,9 +42,7 @@ func HandleExtrato(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	cliente, timeStamp, err := models.GetCliente(db, id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
-			applog.WithTimeStamp("cliente with id `%d` not found", id)
-			fmt.Fprintf(w, "{\"message\": \"cliente not found\"}\n")
+			clienteNotFound(w, id, err)
 			return
 		} else {
 			somethingWentWrong(w, err)
