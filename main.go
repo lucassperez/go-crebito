@@ -29,14 +29,10 @@ func main() {
 
 	var mux *http.ServeMux = http.NewServeMux()
 	mux.HandleFunc("GET /clientes/{id}/extrato", func(w http.ResponseWriter, r *http.Request) {
-		db := <-dbPoolChan
-		defer func() { dbPoolChan <- db }()
-		handlers.HandleExtrato(db, w, r)
+		handlers.HandleExtrato(dbPoolChan, w, r)
 	})
 	mux.HandleFunc("POST /clientes/{id}/transacoes", func(w http.ResponseWriter, r *http.Request) {
-		db := <-dbPoolChan
-		defer func() { dbPoolChan <- db }()
-		handlers.HandleTransacoes(db, w, r)
+		handlers.HandleTransacoes(dbPoolChan, w, r)
 	})
 
 	muxComMiddleware := logMiddleware(mux)

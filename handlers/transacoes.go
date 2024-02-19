@@ -20,7 +20,7 @@ type requestParamsTransacaoPOST struct {
 	Descricao string `json:"descricao"`
 }
 
-func HandleTransacoes(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	clienteIdStr := r.PathValue("id")
@@ -57,6 +57,8 @@ func HandleTransacoes(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
 	}
 
+	db := <-dbPoolChan
+	defer func() { dbPoolChan <- db }()
 	limite, newSaldo, err :=
 		models.InsertTransacaoAndUpdateCliente(db, clienteId, params.Valor, params.Tipo, params.Descricao)
 
