@@ -1,24 +1,19 @@
 #!/bin/sh
 
-if [ "$1" = nojq ]; then
-  nojq=sim
-  shift
+while getopts 'q' flag; do
+  case $flag in
+    q)
+      quiet=sim
+      shift
+      ;;
+  esac
+done
+
+if [ "$#" -gt 0 ]; then
+  args=" $@"
 fi
 
-# At first I tried echoing directly curl ${@:- },
-# but then when $@ was empty, it was left with ugly
-# spaces between curl and the rest of the arguments.
-# So I figured a good ol' if/else would fix it.
-if [ -z "$@" ]; then
-  curl_to_print='curl'
-else
-  curl_to_print="curl $@"
+if [ -z "$quiet" ]; then
+  echo "$(tput bold)curl$args localhost:4000/clientes/1/extrato$(tput sgr0)"
 fi
-
-if [ "$nojq" = sim ]; then
-  echo "$(tput bold)$curl_to_print localhost:4000/clientes/1/extrato$(tput sgr0)"
-  curl $@ localhost:4000/clientes/1/extrato
-else
-  echo "$(tput bold)$curl_to_print localhost:4000/clientes/1/extrato | jq$(tput sgr0)"
-  curl $@ localhost:4000/clientes/1/extrato | jq
-fi
+curl $@ localhost:4000/clientes/1/extrato
