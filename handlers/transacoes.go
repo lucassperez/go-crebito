@@ -14,7 +14,7 @@ import (
 	"github.com/lucassperez/go-crebito/models"
 )
 
-type requestParamsTransacaoPOST struct {
+type requestParamsJSON struct {
 	Valor     int    `json:"valor"`
 	Tipo      string `json:"tipo"`
 	Descricao string `json:"descricao"`
@@ -25,55 +25,27 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 
 	clienteIdStr := r.PathValue("id")
 	clienteId, err := strconv.Atoi(clienteIdStr)
-
 	if err != nil {
 		unparseableId(w, clienteIdStr, err)
 		return
 	}
 
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		applog.WithTimeStamp("could not read body: `%w`", err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
-		return
-	}
-
-	var params requestParamsTransacaoPOST
-
-	err = json.Unmarshal(b, &params)
-	if err != nil {
-		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"could not unmarshall json\", \"json\": %s}\n", b)
-		return
-	}
-
-	json := string(b)
-	if isMissingKeys(json, "valor", "tipo", "descricao") {
-		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
-		return
-	}
-
-	lenDescricao := len(params.Descricao)
-	if params.Valor < 0 || (params.Tipo != "d" && params.Tipo != "c") || (lenDescricao < 1 || lenDescricao > 10) {
-		applog.WithTimeStamp("invalid params: %+v", params)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"invalid params\"}\n")
+	params, ok := validateBody(w, r)
+	if !ok {
 		return
 	}
 
 	db := <-dbPoolChan
-	defer func() { dbPoolChan <- db }()
+	defer func() {
+		dbPoolChan <- db
+	}()
+
 	limite, newSaldo, err :=
 		models.InsertTransacaoAndUpdateCliente(db, clienteId, params.Valor, params.Tipo, params.Descricao)
 
 	if err != nil {
 		if errors.Is(err, &models.ErrNotEnoughBalance{}) {
 			e := err.(*models.ErrNotEnoughBalance)
-
 			applog.WithTimeStamp(e.MoreInfo())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
@@ -97,4 +69,42 @@ func isMissingKeys(json string, keys ...string) bool {
 		}
 	}
 	return false
+}
+
+func validateBody(w http.ResponseWriter, r *http.Request) (requestParamsJSON, bool) {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		applog.WithTimeStamp("could not read body: `%w`", err)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
+		return requestParamsJSON{}, false
+	}
+
+	var params requestParamsJSON
+
+	err = json.Unmarshal(b, &params)
+	if err != nil {
+		applog.WithTimeStamp("could not unmarshall json: `%s`: %+v", b, err)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\"message\": \"could not unmarshall json\", \"json\": %s}\n", b)
+		return requestParamsJSON{}, false
+	}
+
+	json := string(b)
+	if isMissingKeys(json, "valor", "tipo", "descricao") {
+		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
+		return requestParamsJSON{}, false
+	}
+
+	lenDescricao := len(params.Descricao)
+	if params.Valor < 0 || (params.Tipo != "d" && params.Tipo != "c") || (lenDescricao < 1 || lenDescricao > 10) {
+		applog.WithTimeStamp("invalid params: %+v", params)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		fmt.Fprintf(w, "{\"message\": \"invalid params\"}\n")
+		return requestParamsJSON{}, false
+	}
+
+	return params, true
 }

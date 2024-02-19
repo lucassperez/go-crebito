@@ -40,7 +40,10 @@ func HandleExtrato(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Reque
 	}
 
 	db := <-dbPoolChan
-	defer func() { dbPoolChan <- db }()
+	defer func() {
+		dbPoolChan <- db
+	}()
+
 	cliente, timeStamp, err := models.GetCliente(db, id)
 	if err != nil {
 		if errors.Is(err, models.ErrNotFound) {
