@@ -17,11 +17,18 @@ type Transacao struct {
 }
 
 func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
-	rows, err := db.Query(
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("get_cliente: could not start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.Query(
 		`SELECT valor, tipo, descricao, realizada_em FROM transacoes `+
 			`WHERE cliente_id = $1 `+
 			`ORDER BY realizada_em DESC `+
-			`LIMIT 10;`,
+			`LIMIT 10 `+
+			`FOR NO KEY UPDATE;`,
 		id_cliente,
 	)
 
@@ -54,20 +61,31 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 		ts = ts[:size]
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		return nil, fmt.Errorf("get_last_10_transacoes: could not commit the transaction: %w", err)
+	}
+
 	return ts, nil
 }
 
 // InsertTransacaoAndUpdateCliente returns limite, newSaldo and error
 func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, descricao string) (int, int, error) {
-	row := db.QueryRow(`SELECT limite, saldo FROM clientes WHERE id = $1;`, clienteId)
+	tx, err := db.Begin()
+	if err != nil {
+		return 0, 0, fmt.Errorf("get_cliente: could not start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	row := tx.QueryRow(`SELECT limite, saldo FROM clientes WHERE id = $1 FOR NO KEY UPDATE;`, clienteId)
 
 	var limite int
 	var saldo int
 
-	err := row.Scan(&limite, &saldo)
+	err = row.Scan(&limite, &saldo)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, 0, ErrNotFound
+			return 0, 0, fmt.Errorf("cliente not found: %w", ErrNotFound)
 		}
 		return 0, 0, fmt.Errorf("insert_transacao#row.Scan(): %w", err)
 	}
@@ -76,20 +94,18 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 
 	if tipo == "d" {
 		newSaldo = saldo - valor
-		if newSaldo < -limite {
-			return 0, saldo, &ErrNotEnoughBalance{
-				SaldoAtual: saldo, ValorDaTransacao: valor, Limite: limite, ClienteID: clienteId,
-			}
-		}
 	} else if tipo == "c" {
 		newSaldo = saldo + valor
-	} else {
-		// TODO fazer descrição ser um tipo, um enum, algo assim
-		return 0, 0, errors.New("invalid tipo")
 	}
 
-	_, err = db.Exec(
-		`INSERT INTO transacoes (valor, tipo, descricao, cliente_id) VALUES ($1, $2, $3, $4)`,
+	if newSaldo < (limite * -1) {
+		return 0, saldo, &ErrNotEnoughBalance{
+			SaldoAtual: saldo, ValorDaTransacao: valor, Limite: limite, ClienteID: clienteId,
+		}
+	}
+
+	_, err = tx.Exec(
+		`INSERT INTO transacoes (valor, tipo, descricao, cliente_id) VALUES ($1, $2, $3, $4);`,
 		valor, tipo, descricao, clienteId,
 	)
 	if err != nil {
@@ -98,12 +114,17 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 
 	// Should I use returning here to return real value from the database
 	// or is returning the values in these golang variables enough?
-	_, err = db.Exec(
+	_, err = tx.Exec(
 		`UPDATE clientes SET saldo = $1 WHERE id = $2;`,
 		newSaldo, clienteId,
 	)
 	if err != nil {
 		return 0, 0, fmt.Errorf("insert_transacao#db.Exec(transacoes): %w", err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, 0, fmt.Errorf("get_cliente: could not commit the transaction: %w", err)
 	}
 
 	return limite, newSaldo, nil
