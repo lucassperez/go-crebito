@@ -7,8 +7,6 @@ import (
 )
 
 type Transacao struct {
-	// Nunca usado o ID?
-	// ID          int
 	Valor       int
 	Tipo        string
 	Descricao   string
@@ -19,7 +17,7 @@ type Transacao struct {
 func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return nil, fmt.Errorf("get_cliente: could not start transaction: %w", err)
+		return nil, fmt.Errorf("get_last_10_transacoes: could not start transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -33,7 +31,7 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("get_last_10_transacoes#db.Query(): %w", err)
+		return nil, fmt.Errorf("get_last_10_transacoes#tx.Query(): %w", err)
 	}
 
 	defer rows.Close()
@@ -53,7 +51,6 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 
 	err = rows.Err()
 	if err != nil {
-		// Error during iteration?
 		return nil, fmt.Errorf("get_last_10_transacoes#rows.Err(): %w", err)
 	}
 
@@ -73,7 +70,7 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, descricao string) (int, int, error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return 0, 0, fmt.Errorf("get_cliente: could not start transaction: %w", err)
+		return 0, 0, fmt.Errorf("insert_transacao: could not start transaction: %w", err)
 	}
 	defer tx.Rollback()
 
@@ -85,7 +82,7 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 	err = row.Scan(&limite, &saldo)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return 0, 0, fmt.Errorf("cliente not found: %w", ErrNotFound)
+			return 0, 0, fmt.Errorf("insert_transacao: cliente not found: %w", ErrNotFound)
 		}
 		return 0, 0, fmt.Errorf("insert_transacao#row.Scan(): %w", err)
 	}
@@ -109,7 +106,7 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 		valor, tipo, descricao, clienteId,
 	)
 	if err != nil {
-		return 0, 0, fmt.Errorf("insert_transacao#db.Exec(transacoes): %w", err)
+		return 0, 0, fmt.Errorf("insert_transacao#tx.Exec(insert transacoes): %w", err)
 	}
 
 	// Should I use returning here to return real value from the database
@@ -119,12 +116,12 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 		newSaldo, clienteId,
 	)
 	if err != nil {
-		return 0, 0, fmt.Errorf("insert_transacao#db.Exec(transacoes): %w", err)
+		return 0, 0, fmt.Errorf("insert_transacao#tx.Exec(update clientes transacoes): %w", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return 0, 0, fmt.Errorf("get_cliente: could not commit the transaction: %w", err)
+		return 0, 0, fmt.Errorf("insert_transacao: could not commit the transaction: %w", err)
 	}
 
 	return limite, newSaldo, nil
