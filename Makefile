@@ -45,8 +45,9 @@ seed: # executes the seed.sql
 
 reset: drop create seed # database drop, create and seed
 
-prod.up: # docker compose -f docker-compose-prod.yml up -d nginx
-	docker compose -f docker-compose-prod.yml up -d nginx
+
+prod.up: # starts two api services, one db and one nginx, all building from Dockerfile instead of pulling from dockerhub
+	docker compose -f docker-compose-prod.yml up --build -d nginx
 
 prod.gatling: # start gatling load tests
 	./load-test/start.sh
