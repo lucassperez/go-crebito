@@ -109,8 +109,6 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 		return 0, 0, fmt.Errorf("insert_transacao#tx.Exec(insert transacoes): %w", err)
 	}
 
-	// Should I use returning here to return real value from the database
-	// or is returning the values in these golang variables enough?
 	_, err = tx.Exec(
 		`UPDATE clientes SET saldo = $1 WHERE id = $2;`,
 		newSaldo, clienteId,
