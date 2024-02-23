@@ -14,8 +14,8 @@ DB_COMMAND := $(PSQL_COMMAND) --echo-all
 bash: api # starts bash in api container
 	docker compose exec api bash
 
-server: db # starts the db service on the background and run api service with --rm option
-	./scripts/test-db.sh && docker compose run --rm --service-ports api || docker compose stop db
+server: db # starts the db service on the background and starts the api service
+	./scripts/test-db.sh && docker compose up api || docker compose down db
 
 up: # executes docker compose up
 	docker compose up -d
