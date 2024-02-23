@@ -98,9 +98,9 @@ docker compose -f docker-compose-prod.yml logs <service_name> -f
 
 It will place the results in `load-test/user-files/results/`.
 
-Here is an example ran in 2024/02/19:
+Here is an example ran in 2024/02/23:
 
-<img alt="(Image) Gatling tests statistics, 2024/02/19." src="https://github.com/lucassperez/go-crebito/assets/60318892/62f80af7-7f66-4510-85f6-d80c446f5fd7" />
+<img alt="(Image) Gatling tests statistics, 2024/02/23." src="https://github.com/lucassperez/go-crebito/assets/60318892/145855fd-79cf-42be-879b-e2e41d24a016" />
 
 ## Endpoints
 
