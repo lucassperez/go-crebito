@@ -14,7 +14,7 @@ type Transacao struct {
 	ClienteID   int
 }
 
-func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
+func GetLast10Transacoes(db *sql.DB, clienteId int) ([]Transacao, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("get_last_10_transacoes: could not start transaction: %w", err)
@@ -27,7 +27,7 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 			`ORDER BY realizada_em DESC `+
 			`LIMIT 10 `+
 			`FOR NO KEY UPDATE;`,
-		id_cliente,
+		clienteId,
 	)
 
 	if err != nil {
@@ -40,7 +40,7 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 	var size int
 
 	for rows.Next() {
-		t := Transacao{ClienteID: id_cliente}
+		t := Transacao{ClienteID: clienteId}
 		err = rows.Scan(&t.Valor, &t.Tipo, &t.Descricao, &t.RealizadaEm)
 		if err != nil {
 			return nil, fmt.Errorf("get_last_10_transacoes#rows.Scan(): %w", err)
@@ -68,6 +68,11 @@ func GetLast10Transacoes(db *sql.DB, id_cliente int) ([]Transacao, error) {
 
 // InsertTransacaoAndUpdateCliente returns limite, newSaldo and error
 func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, descricao string) (int, int, error) {
+	err := validateValues(valor, tipo, descricao)
+	if err != nil {
+		return 0, 0, err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return 0, 0, fmt.Errorf("insert_transacao: could not start transaction: %w", err)
@@ -89,14 +94,15 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 
 	var newSaldo int
 
-	if tipo == "d" {
+	switch tipo {
+	case "d":
 		newSaldo = saldo - valor
-	} else if tipo == "c" {
+	case "c":
 		newSaldo = saldo + valor
 	}
 
 	if newSaldo < (limite * -1) {
-		return 0, saldo, &ErrNotEnoughBalance{
+		return 0, 0, &ErrNotEnoughBalance{
 			SaldoAtual: saldo, ValorDaTransacao: valor, Limite: limite, ClienteID: clienteId,
 		}
 	}
@@ -123,4 +129,21 @@ func InsertTransacaoAndUpdateCliente(db *sql.DB, clienteId, valor int, tipo, des
 	}
 
 	return limite, newSaldo, nil
+}
+
+func validateValues(valor int, tipo, descricao string) error {
+	if valor <= 0 {
+		return &ErrInvalidValues{Value: "valor", ValidationFailure: "must be positive"}
+	}
+	if tipo != "d" && tipo != "c" {
+		return &ErrInvalidValues{Value: "tipo", ValidationFailure: "must be one of \"c\" or \"d\""}
+	}
+	lenDescricao := len(descricao)
+	if lenDescricao < 1 || lenDescricao > 10 {
+		return &ErrInvalidValues{
+			Value:             "descricao",
+			ValidationFailure: "must be between 1 and 10 characters long, included both ends",
+		}
+	}
+	return nil
 }

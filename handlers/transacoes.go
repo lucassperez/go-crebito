@@ -44,14 +44,19 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 		models.InsertTransacaoAndUpdateCliente(db, clienteId, params.Valor, params.Tipo, params.Descricao)
 
 	if err != nil {
-		if errors.Is(err, &models.ErrNotEnoughBalance{}) {
+		if errors.Is(err, models.ErrNotFound) {
+			clienteNotFound(w, clienteId, err)
+			return
+		} else if errors.Is(err, &models.ErrInvalidValues{}) {
+			applog.WithTimeStamp("invalid params: %s", err.Error())
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			fmt.Fprintf(w, "{\"message\": \"invalid params: %s\"}\n", err.Error())
+			return
+		} else if errors.Is(err, &models.ErrNotEnoughBalance{}) {
 			e := err.(*models.ErrNotEnoughBalance)
 			applog.WithTimeStamp("%s. Values: %s", e.Error(), e.Values())
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
-			return
-		} else if errors.Is(err, models.ErrNotFound) {
-			clienteNotFound(w, clienteId, err)
 			return
 		}
 		somethingWentWrong(w, err)
@@ -95,14 +100,6 @@ func validateBody(w http.ResponseWriter, r *http.Request) (requestParamsJSON, bo
 		applog.WithTimeStamp("json is missing keys: `%s`", string(json))
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"json missing keys\"}\n")
-		return requestParamsJSON{}, false
-	}
-
-	lenDescricao := len(params.Descricao)
-	if params.Valor < 0 || (params.Tipo != "d" && params.Tipo != "c") || (lenDescricao < 1 || lenDescricao > 10) {
-		applog.WithTimeStamp("invalid params: %+v", params)
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		fmt.Fprintf(w, "{\"message\": \"invalid params\"}\n")
 		return requestParamsJSON{}, false
 	}
 

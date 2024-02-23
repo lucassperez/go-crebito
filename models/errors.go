@@ -5,13 +5,27 @@ import (
 	"fmt"
 )
 
-var ErrNotFound = errors.New("models: resource could not be found")
+var ErrNotFound = errors.New("resource could not be found")
 
 type ErrNotEnoughBalance struct {
 	SaldoAtual       int
 	ValorDaTransacao int
 	Limite           int
 	ClienteID        int
+}
+
+type ErrInvalidValues struct {
+	Value             string
+	ValidationFailure string
+}
+
+func (e *ErrInvalidValues) Error() string {
+	return fmt.Sprintf("%s %s", e.Value, e.ValidationFailure)
+}
+
+func (e *ErrInvalidValues) Is(err error) bool {
+	_, ok := err.(*ErrInvalidValues)
+	return ok
 }
 
 func (e *ErrNotEnoughBalance) Error() string {
