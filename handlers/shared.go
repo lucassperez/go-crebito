@@ -8,7 +8,7 @@ import (
 )
 
 func clienteNotFound(w http.ResponseWriter, id int, err error) {
-	applog.WithTimeStamp("cliente with id `%d` not found", id)
+	applog.WithTimeStamp("cliente with id `%d` not found: %s", id, err.Error())
 	w.WriteHeader(http.StatusNotFound)
 	fmt.Fprintf(w, "{\"message\": \"cliente not found\"}\n")
 }
@@ -20,7 +20,7 @@ func somethingWentWrong(w http.ResponseWriter, err error) {
 }
 
 func unparseableId(w http.ResponseWriter, id string, err error) {
-	applog.WithTimeStamp("unparseable id: `%s`", id)
+	applog.WithTimeStamp("unparseable id: `%s`, %s", id, err.Error())
 	w.WriteHeader(http.StatusUnprocessableEntity)
-	fmt.Fprintf(w, "{\"message\": \"unparseable id\"\n}")
+	fmt.Fprintf(w, "{\"message\": \"unparseable id\"}\n")
 }

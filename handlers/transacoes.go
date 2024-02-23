@@ -74,7 +74,7 @@ func isMissingKeys(json string, keys ...string) bool {
 func validateBody(w http.ResponseWriter, r *http.Request) (requestParamsJSON, bool) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		applog.WithTimeStamp("could not read body: `%w`", err)
+		applog.WithTimeStamp("could not read body: `%s`", err.Error())
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		fmt.Fprintf(w, "{\"message\": \"could not read body\"\n}")
 		return requestParamsJSON{}, false
