@@ -48,15 +48,14 @@ func HandleTransacoes(dbPoolChan chan *sql.DB, w http.ResponseWriter, r *http.Re
 			clienteNotFound(w, clienteId, err)
 			return
 		} else if errors.Is(err, &models.ErrInvalidValues{}) {
-			applog.WithTimeStamp("invalid params: %s", err.Error())
+			applog.WithTimeStamp("models: %s", err.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			fmt.Fprintf(w, "{\"message\": \"invalid params: %s\"}\n", err.Error())
+			fmt.Fprintf(w, "{\"message\": \"%s\"}\n", err.Error())
 			return
 		} else if errors.Is(err, &models.ErrNotEnoughBalance{}) {
-			e := err.(*models.ErrNotEnoughBalance)
-			applog.WithTimeStamp("%s. Values: %s", e.Error(), e.Values())
+			applog.WithTimeStamp("models: %s", err.Error())
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			fmt.Fprintf(w, "{\"message\": \"not enough balance\", \"values\": \"%s\"}\n", e.Values())
+			fmt.Fprintf(w, "{\"message\": \"%s\"}\n", err.Error())
 			return
 		}
 		somethingWentWrong(w, err)
