@@ -102,6 +102,30 @@ Here is an example ran in 2024/02/23:
 
 <img alt="(Image) Gatling tests statistics, 2024/02/23." src="https://github.com/lucassperez/go-crebito/assets/60318892/145855fd-79cf-42be-879b-e2e41d24a016" />
 
+## Results
+
+On the 14th of March of 2024, the results were published. Every contender started
+with a certain amount of points and some criteria could deduct points. They were
+as follows:
+
+- If at least 98% of the requests were responded with less than 250ms, you'd get
+no deductions. If your api had less than 98%, you'd lose points based on how many
+% of requests were responded on 250ms or more.
+- If the balance were not consistent, you'd lose some points based on how many
+inconsistencies the system had.
+
+Inconsistencies would discount more points than speed of requests, meaning that
+consistency was more important.
+
+This API had a grand total of 0 penalties! Meaning it passed with max score. 🎉
+
+This talks a lot about Golang's efficiency. Also, most of the work was done in
+Postgresql handling the locks.
+
+Results can be seen <a taget="_blank" href="https://github.com/zanfranceschi/rinha-de-backend-2024-q1/blob/main/RESULTADOS.md">here</a>.
+
+Access this page and search for `lucassperez-go-crebito`. Yay! (:
+
 ## Endpoints
 
 ### GET /clientes/{id}/extrato
